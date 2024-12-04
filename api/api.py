@@ -48,7 +48,7 @@ langsmith_api_key = os.getenv("langsmith_api_key")
 
 
 
-
+port = os.getenv("PORT")
 # Set additional environment variables programmatically
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
@@ -147,4 +147,4 @@ def calculate_similarity(title_input: TitleInput):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app)
+    uvicorn.run(app ,port= port)
