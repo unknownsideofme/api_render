@@ -15,6 +15,8 @@ from api.semantic_score import calc_semantic_score
 from api.prefix_suffix import Pref_suff
 from api.suggestions import calc_suggestions
 import re
+from fastapi.middleware.cors import CORSMiddleware
+
 
 def clean_suggest(input_string):
     # Remove extra newlines and spaces, but preserve internal content formatting
@@ -64,7 +66,13 @@ os.environ["LANGCHAIN_PROJECT"] = "SLIFTEX"
 
 # Initialize FastAPI
 app = FastAPI()
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Replace "*" with specific domains for better security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 
