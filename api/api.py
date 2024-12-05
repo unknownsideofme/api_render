@@ -75,7 +75,13 @@ app.add_middleware(
 )
 
 
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow requests from all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 # Paths for FAISS index and metadata
 faiss_index_path = "faiss_index"
 metadata_path = "faiss_metadata.pkl"
