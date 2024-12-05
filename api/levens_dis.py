@@ -22,6 +22,7 @@ def calc_levens_score (context , title , llm , db  ):
         4. make sure to remove the prefix and suffix of the existinf titles also . 
         5. Then provide a score out of 100 on the basis of the Levenshtein distance.
         6. Dont return \n  in the output.
+        7. Strip the prefixes and suffixes from the input title before calculating the Levenshtein distance.
         Output Format:
         {{
             {{

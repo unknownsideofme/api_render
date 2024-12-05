@@ -12,7 +12,14 @@ import pickle
 from api.levens_dis import calc_levens_score
 from api.phon_score import calc_phonatic_score
 from api.semantic_score import calc_semantic_score
+from api.prefix_suffix import Pref_suff
+from api.suggestions import calc_suggestions
+import re
 
+def clean_suggest(input_string):
+    # Remove extra newlines and spaces, but preserve internal content formatting
+    cleaned_string = re.sub(r'(\s*\n\s*)+', ' ', input_string)  # Remove excessive newlines and spaces
+    return cleaned_string.strip()
 
 
 def remove_newlines(obj):
@@ -24,7 +31,7 @@ def remove_newlines(obj):
             return remove_newlines(parsed_obj)
         except json.JSONDecodeError:
             # If it cannot be parsed (it's just a regular string), remove newlines and spaces
-            return obj.replace("\n", "").replace(" ", "")
+            return obj.replace("\n", "").replace("  ", "")
     
     elif isinstance(obj, list):  # If it's a list, process each element
         return [remove_newlines(item) for item in obj]
@@ -48,7 +55,7 @@ langsmith_api_key = os.getenv("langsmith_api_key")
 
 
 
-port = os.getenv("PORT")
+
 # Set additional environment variables programmatically
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
@@ -124,6 +131,8 @@ def calculate_similarity(title_input: TitleInput):
         return cleared_res
         
     else :
+        #prefix and suffix removal
+        pref_suff_score = Pref_suff(context, title, llm, db)
         # Calculate Levenshtein distance
         levens_score = calc_levens_score(context, title, llm, db)
         # Calculate phonetic similarity
@@ -131,20 +140,35 @@ def calculate_similarity(title_input: TitleInput):
         # Calculate semantic similarity
         semantic_score = calc_semantic_score(context, title, llm, db)
         
+        
         response = {
             "message" : {
                 "string_similar" : levens_score,
                 "phonetic_similar" : phonetic_score,
-                "semantic_similar" : semantic_score,
-                "suggestions" : "Sample Suggestions"
+                "semantic_similar" : semantic_score,  
+                "prefix_suffix_score" : pref_suff_score
             }
         }
         res = json.dumps(response)
         cleared_res = remove_newlines(res)
-        return cleared_res
+        suggest = calc_suggestions(cleared_res, title, llm)
+        response1 = {
+            
+            "string_similar" : levens_score,
+            "phonetic_similar" : phonetic_score,
+            "semantic_similar" : semantic_score,
+                
+            
+        }
+        cleared_res1 = {
+            "message" : remove_newlines(json.dumps(response1)),
+            "suggestions" : remove_newlines(json.dumps(suggest))
+        }
+        return cleared_res1
         
      
 
 
 if __name__ == "__main__":
-    uvicorn.run(app ,port= port)
+    uvicorn.run(app)
+

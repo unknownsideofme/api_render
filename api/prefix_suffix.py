@@ -51,41 +51,45 @@ context = db
 # Initialize the LLM model (OpenAI GPT-3.5-turbo)
 llm = ChatOpenAI(model = "gpt-3.5-turbo", api_key=api_key)
 
-def Pref_suff (context ,llm , db  ):
-    
+def Pref_suff(context,  title, llm, db ):
+   
+    # Define the prompt
     prompt = ChatPromptTemplate.from_template("""
     You are a title verification assistant for the Press Registrar General of India.
 
-    1. You are given a list of existing titles.
-    2. Your task is to find out the list of most used prefixes and suffixes of the title.
-    3. Return the list of prefixes and suffixes with a percentage that represents the frequency of the prefix or suffix in the titles.
-    4. % = (number of titles with the prefix or suffix / total number of titles) * 100.
-    5. Only find out the list of top 40 prefixes and suffixes.
-
+    1. You are given a list of existing titles and an input title.
+    2. Your task is to find out in how many existing titles the prefixes and suffixes of the input title is used.
+    3. Return the a percentage that represents the frequency of the prefix or suffix in the titles.
+    4. "frequency%"= (number of titles with the prefix or suffix / total number of titles) * 100 .
+    5. The words like "The" "A" "An" are considered as prefixes.
+    6. The words like "Ltd" "Inc" "Co" are considered as suffixes.
+    7. In case of exeamples like "The New York Times" "The" is the prefix and "Times" is the suffix.
+    8. In case of examples like "The New York Express" since Express has been repeated in the database as a suffix, it should be considered as a suffix.
+    9. Returen only the precentage of the words they are repeated as prefixes and suffixes.
+    10. Dont return the actual no of titles
     Output Format:
     {{
         "prefixes": {{
-            "prefix1": 10,
-            "prefix2": 5,
+            "prefix1": %,
+            "prefix2": %,
             ...
         }},
         "suffixes": {{
-            "suffix1": 15,
-            "suffix2": 12,
+            "suffix1": %,
+            "suffix2": %,
             ...
         }}
     }}
-
+    input : {input}
     context : {context}
-    """
-
-    )
+    """)
     retriever = db.as_retriever()
+    # Create document chain and retrieval chain
     document_chain_semantic = create_stuff_documents_chain(llm, prompt)
-    retreival_chain_semantic = create_retrieval_chain(retriever, document_chain_semantic)
+    retrieval_chain_semantic = create_retrieval_chain(retriever, document_chain_semantic)
     
-    res = retreival_chain_semantic.invoke({ "input": context})
+    # Invoke the retrieval chain with extracted context
+    res = retrieval_chain_semantic.invoke({"input": title, "context": context})
     return res['answer']
 
 
-print( Pref_suff (context ,llm , db  ))
